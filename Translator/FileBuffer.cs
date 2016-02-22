@@ -5,14 +5,16 @@ using System.Text;
 using System.IO;
 namespace Translator
 {
-    class FileBuffer: IDisposable
+    class FileBuffer: IDisposable, ITextBuffer
     {
         FileStream _stream;
         byte _current;
+        bool _ended;
 
         public FileBuffer(string path)
         {
             _stream = new FileStream(path, FileMode.Open);
+            _ended = false;
         }
 
         public byte CurrentByte {
@@ -33,7 +35,10 @@ namespace Translator
         public bool TryMoveNext()
         {
             if (_stream.Position >= _stream.Length)
+            {
+                _ended = true;
                 return false;
+            }
 
             _current = (byte)_stream.ReadByte();
 
@@ -44,5 +49,7 @@ namespace Translator
         {
             _stream.Dispose();
         }
+
+        public bool EndReached { get { return _ended; } }
     }
 }
