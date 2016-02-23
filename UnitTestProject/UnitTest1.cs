@@ -11,7 +11,7 @@ namespace UnitTestProject
         [TestMethod]
         public void DelimiterHell()
         {
-            var inp = new StringAsFileBuffer("<= + - >");
+            var inp = new StringAsFileBuffer("<= +- > <>> <=>");
             var lexer = new LexAn();
             lexer.Scan(inp);
             CollectionAssert.AreEqual(lexer.Output, new List<int> { 12, 4, 5, 13 });

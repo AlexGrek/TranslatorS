@@ -12,7 +12,7 @@ namespace Translator
     public class LexAn
     {
         [Flags]
-        public enum SymbolCat {Unknown, Whitespace, Delimiter, Digit, Identifier,  }
+        public enum SymbolCat {Unknown, Whitespace, Delimiter, Digit, Identifier,  MultiDelimiter}
 
         public Table Identifiers { get; private set; }
         public Table Delimiters { get; private set; }
@@ -44,8 +44,12 @@ namespace Translator
 
                 //delimiters
                 else if (i == '(' || i == ')' || i == '.' || i == ';' || i == '+' || i == '-' || i == ':'
-                    || i == ',' || i == '$' || i == '\\' || i == '=' || i == '<' || i == '>')
+                    || i == ',' || i == '$' || i == '\\' || i == '=')
                     _char[i] = SymbolCat.Delimiter;
+
+                //multisymbol delimiters
+                else if (i == '>' || i == '<')
+                    _char[i] = SymbolCat.MultiDelimiter;
 
                 //spaces
                 else if (i == 13 || i == 10 || i == 32)
@@ -68,7 +72,7 @@ namespace Translator
 
             var del = new string[]
             {
-                "(", ")", ".", ";", "+", "-", ":", ",", "$", "\\", "=", ">=", "<=", ">", "<"
+                "(", ")", ".", ";", "+", "-", ":", ",", "$", "\\", "=", ">=", "<=", ">", "<", "<>"
             };
             Delimiters = new Table(del);
         }
@@ -106,12 +110,23 @@ namespace Translator
 
                     case SymbolCat.Delimiter:
                         str.Append(file.CurrentChar);
-                        while (file.TryMoveNext() && _char[file.CurrentByte] == SymbolCat.Delimiter)
+                        file.TryMoveNext();
+                        DelimiterOut(str);
+                        str.Clear();
+                        break;
+
+                    case SymbolCat.MultiDelimiter:  //handle <= and >= and <>
+                        str.Append(file.CurrentChar);
+                        while (file.TryMoveNext() && (_char[file.CurrentByte] == SymbolCat.Delimiter || _char[file.CurrentByte] == SymbolCat.MultiDelimiter))
                         {
-                            str.Append(file.CurrentChar);
-                            TryDelimiterOut(str);
+                            if (file.CurrentChar == '=' || (file.CurrentChar == '>' && str.ToString() == "<"))
+                            {
+                                str.Append(file.CurrentChar);
+                                file.TryMoveNext();
+                            }
+                            break;
                         }
-                        DelimitersOut(str);
+                        DelimiterOut(str);
                         str.Clear();
                         break;
 
@@ -162,6 +177,11 @@ namespace Translator
             foreach (char ch in sb.ToString())
                 Output.Add(Delimiters[ch.ToString()]);
 
+        }
+
+        private void DelimiterOut(StringBuilder sb)
+        {
+                Output.Add(Delimiters[sb.ToString()]);
         }
     }
 }
