@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Translator
+namespace SignalTranslatorCore
 {
     public class StringAsFileBuffer: ITextBuffer
     {

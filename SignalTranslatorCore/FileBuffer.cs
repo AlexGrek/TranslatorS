@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-namespace Translator
+
+namespace SignalTranslatorCore
 {
     class FileBuffer: IDisposable, ITextBuffer
     {
