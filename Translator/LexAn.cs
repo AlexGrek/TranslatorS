@@ -15,6 +15,7 @@ namespace Translator
         public enum SymbolCat {Unknown, Whitespace, Delimiter, Digit, Identifier,  MultiDelimiter}
 
         public Table Identifiers { get; private set; }
+        public Table Constants { get; private set; }
         public Table Delimiters { get; private set; }
         public Table Keywords { get; private set; }
 
@@ -68,7 +69,8 @@ namespace Translator
                 "defunc"
             };
             Keywords = new Table(keyw, startIndex: 300);
-            Identifiers = new Table(canAdd: true, startIndex: 400);
+            Identifiers = new Table(canAdd: true, startIndex: 500);
+            Constants = new Table(canAdd: true, startIndex: 400);
 
             var del = new string[]
             {
@@ -142,41 +144,37 @@ namespace Translator
 
         private void IdentifierOut(StringBuilder sb)
         {
+            var str = sb.ToString();
 
+            //handle keyword
+            if (Keywords.ContainsKey(str))
+            {
+                Output.Add(Keywords[str]);
+            }
+            else if (Identifiers.ContainsKey(str)) //handle existing user identifier
+            {
+                Output.Add(Identifiers[str]);
+            }
+            else //create new identifier
+            {
+                Identifiers.Add(str);
+                Output.Add(Identifiers[str]);
+            }
         }
 
         private void NumberOut(StringBuilder sb)
         {
+            var str = sb.ToString();
 
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sb"></param>
-        /// <returns>true if multichar delimiter detected, false if it's just one-symbol delimiters</returns>
-        private bool TryDelimiterOut(StringBuilder sb)
-        {
-            //it's multichar delimiter or one single-char delimiter
-            if (Delimiters.ContainsKey(sb.ToString()))
+            if (Constants.ContainsKey(str)) //handle existing user identifier
             {
-                Output.Add(Delimiters[sb.ToString()]);
-                sb.Clear();
-                return true;
+                Output.Add(Constants[str]);
             }
-            else
+            else //create new identifier
             {
-                Output.Add(Delimiters[sb[0].ToString()]);
-                sb.Remove(0, 1); //remove delimiter that is already added
-                return false;
+                Constants.Add(str);
+                Output.Add(Constants[str]);
             }
-        }
-
-        private void DelimitersOut(StringBuilder sb)
-        {
-            foreach (char ch in sb.ToString())
-                Output.Add(Delimiters[ch.ToString()]);
-
         }
 
         private void DelimiterOut(StringBuilder sb)
