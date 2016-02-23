@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Translator
 {
-    interface ITextBuffer
+    public interface ITextBuffer
     {
         byte CurrentByte
         {
@@ -20,6 +20,6 @@ namespace Translator
 
         bool TryMoveNext();
 
-        bool EndReached { get; };
+        bool EndReached { get; }
     }
 }

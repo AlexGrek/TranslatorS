@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Translator
 {
-    class StringAsFileBuffer: ITextBuffer
+    public class StringAsFileBuffer: ITextBuffer
     {
         string _internal;
-        int _position = 0;
+        int _position = -1;
         byte[] _byteArray;
         public bool EndReached { get; private set; } = false;
 
@@ -37,7 +37,7 @@ namespace Translator
 
         public bool TryMoveNext()
         {
-            if (_position >= _internal.Length)
+            if (_position >= _byteArray.Length - 1)
             {
                 EndReached = true;
                 return false;

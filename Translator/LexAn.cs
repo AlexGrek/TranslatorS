@@ -9,7 +9,7 @@ namespace Translator
     /// <summary>
     /// Lexical analyser
     /// </summary>
-    class LexAn
+    public class LexAn
     {
         [Flags]
         public enum SymbolCat {Unknown, Whitespace, Delimiter, Digit, Identifier,  }
@@ -44,7 +44,7 @@ namespace Translator
 
                 //delimiters
                 else if (i == '(' || i == ')' || i == '.' || i == ';' || i == '+' || i == '-' || i == ':'
-                    || i == ',' || i == '$' || i == '\\' || i == '=')
+                    || i == ',' || i == '$' || i == '\\' || i == '=' || i == '<' || i == '>')
                     _char[i] = SymbolCat.Delimiter;
 
                 //spaces
@@ -68,7 +68,7 @@ namespace Translator
 
             var del = new string[]
             {
-                "(", ")", ".", ";", "+", "-", ":", ",", "$", "\\", "="
+                "(", ")", ".", ";", "+", "-", ":", ",", "$", "\\", "=", ">=", "<=", ">", "<"
             };
             Delimiters = new Table(del);
         }
@@ -116,6 +116,7 @@ namespace Translator
                         break;
 
                     case SymbolCat.Whitespace:
+                        file.TryMoveNext();
                         break;  //ignore
 
                     default:

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Translator
 {
-    class Table : IDictionary<string, int>
+    public class Table : IDictionary<string, int>
     {
         Dictionary<string, int> _table = new Dictionary<string, int>();
         bool _canAdd;
@@ -29,10 +29,6 @@ namespace Translator
             _table.Add(identifier, _startIndex + _table.Count);
         }
 
-        public bool Exists(string s)
-        {
-            
-        }
 
         #region IDictionary
         public int this[string key]
