@@ -4,9 +4,82 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SignalIDE"
+        x:Name="Window1"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="Signal IDE 0.1 by Alex Grek " Height="480" Width="640">
     <Grid>
-        <TextBox Name="EditField" Margin="10" FontFamily="Consolas" AcceptsReturn="True"></TextBox>
+        <Menu Height="20" Margin="0,0,0,0" VerticalAlignment="Top" >
+            <MenuItem Header="File">
+                <MenuItem Header="Open"></MenuItem>
+                <MenuItem Header="Save"></MenuItem>
+                <MenuItem Header="Quit"></MenuItem>
+            </MenuItem>
+        </Menu>
+        <ToolBar x:Name="toolBar" Margin="0,20,0,0" VerticalAlignment="Top" Height="30">
+            <Button x:Name="CompileButton" Content="Compile" VerticalAlignment="Stretch" Width="75" Click="CompileButton_Click"/>
+
+        </ToolBar>
+        <Grid Margin="5,60,5,5">
+            <Grid.RowDefinitions>
+                <RowDefinition></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition Width="auto"></ColumnDefinition>
+                <ColumnDefinition Width="200"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition MinHeight="100"></RowDefinition>
+                    <RowDefinition Height="auto"></RowDefinition>
+                    <RowDefinition Name="LogRow" Height="0"></RowDefinition>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <TextBox Name="EditField" FontFamily="Consolas" AcceptsReturn="True" TextWrapping="Wrap"
+                         HorizontalScrollBarVisibility="Visible"/>
+                <GridSplitter Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Height="5"
+                      VerticalAlignment="Center" HorizontalAlignment="Stretch" ResizeDirection="Rows" ></GridSplitter>
+                <TextBox Name="OutputField" Grid.Row="2" FontFamily="Consolas" AcceptsReturn="True" IsReadOnly="True"
+                         Text="{Binding ElementName=Window1, Path=Log, Mode=OneWay}" TextWrapping="Wrap"
+                         ScrollViewer.VerticalScrollBarVisibility="Visible"/>
+            </Grid>
+            
+            <TabControl Grid.Column="2">
+                <TabItem Header="Lexical">
+                    <ScrollViewer>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="{Binding ElementName=Window1, Path=Output, Mode=OneWay}"/>
+                            <DataGrid HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                AutoGenerateColumns="False"
+                                x:Name="IdentifiersTable"
+                                      >
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="N" Binding="{Binding Value}" />
+                                    <DataGridTextColumn Header="Identifier" Binding="{Binding Key}" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <DataGrid HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                AutoGenerateColumns="False"
+                                x:Name="DelimitersTable"
+                                      ItemsSource="{Binding ElementName=Window1, Path=Delimiters}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="N" Binding="{Binding Value}" />
+                                    <DataGridTextColumn Header="Delimiter" Binding="{Binding Key}" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+            <GridSplitter Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" Width="5"
+                      VerticalAlignment="Stretch" HorizontalAlignment="Center"></GridSplitter>
+        </Grid>
+
+
     </Grid>
 </Window>

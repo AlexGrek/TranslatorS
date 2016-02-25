@@ -44,12 +44,12 @@ namespace SignalTranslatorCore
                     _char[i] = SymbolCat.Identifier;
 
                 //delimiters
-                else if (i == '(' || i == ')' || i == '.' || i == ';' || i == '+' || i == '-' || i == ':'
-                    || i == ',' || i == '$' || i == '\\' || i == '=')
+                else if (i == ')' || i == '.' || i == ';' || i == '+' || i == '-' || i == ':'
+                    || i == ',' || i == '\\' || i == '=' || i == '*')
                     _char[i] = SymbolCat.Delimiter;
 
                 //multisymbol delimiters
-                else if (i == '>' || i == '<')
+                else if (i == '>' || i == '<' || i == '(' || i == '$')
                     _char[i] = SymbolCat.MultiDelimiter;
 
                 //spaces
@@ -74,7 +74,7 @@ namespace SignalTranslatorCore
 
             var del = new string[]
             {
-                "(", ")", ".", ";", "+", "-", ":", ",", "$", "\\", "=", ">=", "<=", ">", "<", "<>"
+                "(", ")", ".", ";", "+", "-", ":", ",", "$", "\\", "=", ">=", "<=", ">", "<", "<>", "($", "$)"
             };
             Delimiters = new Table(del);
         }
@@ -117,14 +117,44 @@ namespace SignalTranslatorCore
                         str.Clear();
                         break;
 
-                    case SymbolCat.MultiDelimiter:  //handle <= and >= and <>
+                    case SymbolCat.MultiDelimiter:  
                         str.Append(file.CurrentChar);
                         while (file.TryMoveNext() && (_char[file.CurrentByte] == SymbolCat.Delimiter || _char[file.CurrentByte] == SymbolCat.MultiDelimiter))
                         {
-                            if (file.CurrentChar == '=' || (file.CurrentChar == '>' && str.ToString() == "<"))
+                            if (file.CurrentChar == '=' || (file.CurrentChar == '>' && str.ToString() == "<")) //handle <= and >= and <>
                             {
                                 str.Append(file.CurrentChar);
                                 file.TryMoveNext();
+                            }
+                            else if (file.CurrentChar == '$' && str.ToString() == "(")  //handle ($
+                            {
+                                str.Append(file.CurrentChar);
+                                file.TryMoveNext();
+                            }
+                            else if (file.CurrentChar == ')' && str.ToString() == "$")  //handle $)
+                            {
+                                str.Append(file.CurrentChar);
+                                file.TryMoveNext();
+                            }
+                            else if (file.CurrentChar == '*' && str.ToString() == "(")  //handle COMMENT
+                            {
+                                str.Clear();
+                                char prev = ' ';
+                                bool closed = false;
+                                while (file.TryMoveNext())  //comment loop
+                                {
+                                    //detect the end of comment "*)"
+                                    if (file.CurrentChar == ')' && prev == '*')
+                                    {
+                                        file.TryMoveNext(); //move to next char
+                                        closed = true;  //to handle EOF in comment loop
+                                        break;  //exit comment loop
+                                    }
+                                    else
+                                        prev = file.CurrentChar;
+                                }
+                                if (file.EndReached && !closed)
+                                    throw new FormatException("Unclosed comment!");
                             }
                             break;
                         }
@@ -179,6 +209,7 @@ namespace SignalTranslatorCore
 
         private void DelimiterOut(StringBuilder sb)
         {
+            if (sb.Length > 0)
                 Output.Add(Delimiters[sb.ToString()]);
         }
     }
