@@ -14,6 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using SignalTranslatorCore;
 using System.ComponentModel;
+using System.IO;
 
 namespace SignalIDE
 {
@@ -74,6 +75,7 @@ namespace SignalIDE
         {
             var str = EditField.Text;
             var inp = new StringAsFileBuffer(str);
+            _lexer.Clear();
 
             try {
                 _lexer.Scan(inp);
@@ -104,13 +106,37 @@ namespace SignalIDE
             }
 
             Log = "Lexical output: " + result;
-
             
             Binding b = new Binding();
             b.Source = Identifiers;
             b.Mode = BindingMode.OneWay;
             BindingOperations.ClearBinding(IdentifiersTable, DataGrid.ItemsSourceProperty);
             IdentifiersTable.SetBinding(DataGrid.ItemsSourceProperty, b);
+        }
+
+        private void MenuItem_ClickOpen(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            bool? result = dlg.ShowDialog();
+            if (result.HasValue && result.Value == true)
+            {
+                var lines = File.ReadAllText(dlg.FileName);
+                EditField.Text = lines;
+            }
+        }
+
+        private void MenuItem_ClickSave(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.DefaultExt = ".signal";
+            dlg.OverwritePrompt = true;
+            dlg.AddExtension = true;
+            dlg.Filter = "Signal files (*.signal)|*.signal";
+            var result = dlg.ShowDialog();
+            if (result.HasValue && result.Value == true)
+            {
+                File.WriteAllText(dlg.FileName, EditField.Text);
+            }
         }
     }
 }

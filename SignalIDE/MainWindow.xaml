@@ -10,14 +10,26 @@
     <Grid>
         <Menu Height="20" Margin="0,0,0,0" VerticalAlignment="Top" >
             <MenuItem Header="File">
-                <MenuItem Header="Open"></MenuItem>
-                <MenuItem Header="Save"></MenuItem>
+                <MenuItem Header="Open" Click="MenuItem_ClickOpen"></MenuItem>
+                <MenuItem Header="Save" Click="MenuItem_ClickSave"></MenuItem>
                 <MenuItem Header="Quit"></MenuItem>
             </MenuItem>
+            <MenuItem Header="Edit"></MenuItem>
+            <MenuItem Header="View"></MenuItem>
+            <MenuItem Header="Build"></MenuItem>
+            <MenuItem Header="Debug"></MenuItem>
+            <MenuItem Header="Analysis"></MenuItem>
+            <MenuItem Header="Window"></MenuItem>
+            <MenuItem Header="Help"></MenuItem>
         </Menu>
         <ToolBar x:Name="toolBar" Margin="0,20,0,0" VerticalAlignment="Top" Height="30">
             <Button x:Name="CompileButton" Content="Compile" VerticalAlignment="Stretch" Width="75" Click="CompileButton_Click"/>
-
+            <Button x:Name="RunButton" Content="Run" VerticalAlignment="Stretch" Width="45"/>
+            <Button Content="Debug" VerticalAlignment="Stretch" Width="75"/>
+            <Button Content="Clear" VerticalAlignment="Stretch" Width="75"/>
+            <Button Content="Intend" VerticalAlignment="Stretch" Width="75"/>
+            <Button Content="Save" VerticalAlignment="Stretch" Width="75"/>
+            <Button Content="Build" VerticalAlignment="Stretch" Width="75"/>
         </ToolBar>
         <Grid Margin="5,60,5,5">
             <Grid.RowDefinitions>
@@ -38,7 +50,7 @@
                     <ColumnDefinition></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <TextBox Name="EditField" FontFamily="Consolas" AcceptsReturn="True" TextWrapping="Wrap"
-                         HorizontalScrollBarVisibility="Visible"/>
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"/>
                 <GridSplitter Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Height="5"
                       VerticalAlignment="Center" HorizontalAlignment="Stretch" ResizeDirection="Rows" ></GridSplitter>
                 <TextBox Name="OutputField" Grid.Row="2" FontFamily="Consolas" AcceptsReturn="True" IsReadOnly="True"
@@ -75,6 +87,8 @@
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
+                <TabItem Header="Syntax"/>
+                <TabItem Header="Output"/>
             </TabControl>
             <GridSplitter Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" Width="5"
                       VerticalAlignment="Stretch" HorizontalAlignment="Center"></GridSplitter>

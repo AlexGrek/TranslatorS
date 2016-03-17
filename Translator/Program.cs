@@ -13,7 +13,7 @@ namespace Translator
         {
             Console.WriteLine("Enter the filename: ");
             var path = Console.ReadLine();
-            var lexer = new LexAn();
+            //var lexer = new LexAn();
             /*
             try
             {

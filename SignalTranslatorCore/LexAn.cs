@@ -58,15 +58,30 @@ namespace SignalTranslatorCore
             }
         }
 
+        public void Clear()
+        {
+            InitializeTables();
+            Output.Clear();
+        }
+
         private void InitializeTables()
         {
             var keyw = new string[]
             {
-                "program",
-                "procedure",
-                "begin",
-                "end",
-                "defunc"
+                "PROGRAM",
+                "PROCEDURE",
+                "BEGIN",
+                "END",
+                "DEFUNC",
+                "LABEL",
+                "INTEGER",
+                "FLOAT",
+                "BLOCKFLOAT",
+                "LOOP",
+                "GOTO",
+                "LINK",
+                "IN", "OUT",
+                "RETURN"
             };
             Keywords = new Table(keyw, startIndex: 300);
             Identifiers = new Table(canAdd: true, startIndex: 500);

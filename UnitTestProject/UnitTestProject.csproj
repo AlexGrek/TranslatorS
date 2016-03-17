@@ -54,9 +54,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Translator\Translator.csproj">
-      <Project>{aebf1e8d-2d64-416d-8f69-3d0a72107ea2}</Project>
-      <Name>Translator</Name>
+    <ProjectReference Include="..\SignalTranslatorCore\SignalTranslatorCore.csproj">
+      <Project>{9227ef41-8928-492f-ad7a-777e3298dadd}</Project>
+      <Name>SignalTranslatorCore</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>
