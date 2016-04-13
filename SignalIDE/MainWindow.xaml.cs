@@ -47,7 +47,6 @@ namespace SignalIDE
         }
 
         public IDictionary<string, int> Delimiters { get {
-                var lex = new LexAn();
                 return _lexer.Delimiters;
             } }
 
@@ -58,6 +57,16 @@ namespace SignalIDE
                 return _lexer.Identifiers;
             }
         }
+
+
+        public IDictionary<string, int> Constants
+        {
+            get
+            {
+                return _lexer.Constants;
+            }
+        }
+
 
         public string Output { get; set; } = "not compiled yet";
 
@@ -112,6 +121,12 @@ namespace SignalIDE
             b.Mode = BindingMode.OneWay;
             BindingOperations.ClearBinding(IdentifiersTable, DataGrid.ItemsSourceProperty);
             IdentifiersTable.SetBinding(DataGrid.ItemsSourceProperty, b);
+
+            Binding bs = new Binding();
+            bs.Source = Constants;
+            bs.Mode = BindingMode.OneWay;
+            BindingOperations.ClearBinding(ConstTable, DataGrid.ItemsSourceProperty);
+            ConstTable.SetBinding(DataGrid.ItemsSourceProperty, bs);
         }
 
         private void MenuItem_ClickOpen(object sender, RoutedEventArgs e)

@@ -24,5 +24,14 @@ namespace UnitTestProject
             lexer.Scan(inp);
             CollectionAssert.AreEqual(lexer.Output, new List<int> { 500, 13, 501, 300, 11, 400, 3, 502  });
         }
+
+        [TestMethod]
+        public void Tree()
+        {
+            var t = new Tree<string>();
+            t.Root = new TreeNode<string>("Hello");
+            t.Root.AddNode("Bye").AddNode("lol").AddNode("gee");
+            Assert.AreEqual("Hello [ Bye [ lol [ gee ] ] ]", t.ToString());
+        }
     }
 }

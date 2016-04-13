@@ -62,7 +62,6 @@
                 <TabItem Header="Lexical">
                     <ScrollViewer>
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Text="{Binding ElementName=Window1, Path=Output, Mode=OneWay}"/>
                             <DataGrid HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
                                 AutoGenerateColumns="False"
@@ -81,6 +80,16 @@
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="N" Binding="{Binding Value}" />
                                     <DataGridTextColumn Header="Delimiter" Binding="{Binding Key}" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <DataGrid HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                AutoGenerateColumns="False"
+                                x:Name="ConstTable"
+                                      ItemsSource="{Binding ElementName=Window1, Path=Constants}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="N" Binding="{Binding Value}" />
+                                    <DataGridTextColumn Header="Constant" Binding="{Binding Key}" />
                                 </DataGrid.Columns>
                             </DataGrid>
                             
