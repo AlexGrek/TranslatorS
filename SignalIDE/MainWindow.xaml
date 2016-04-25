@@ -58,7 +58,7 @@
                          ScrollViewer.VerticalScrollBarVisibility="Visible"/>
             </Grid>
             
-            <TabControl Grid.Column="2">
+            <TabControl x:Name="tabs" Grid.Column="2">
                 <TabItem Header="Lexical">
                     <ScrollViewer>
                         <StackPanel Orientation="Vertical">
@@ -96,8 +96,14 @@
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
-                <TabItem Header="Syntax"/>
+                <TabItem Header="Syntax">
+                    <TreeView x:Name="treeView">
+                        <TreeViewItem IsSelected="True">
+                        </TreeViewItem>
+                    </TreeView>
+                </TabItem>
                 <TabItem Header="Output"/>
+                
             </TabControl>
             <GridSplitter Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" Width="5"
                       VerticalAlignment="Stretch" HorizontalAlignment="Center"></GridSplitter>

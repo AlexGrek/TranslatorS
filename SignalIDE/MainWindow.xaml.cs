@@ -70,7 +70,19 @@ namespace SignalIDE
 
         public string Output { get; set; } = "not compiled yet";
 
-        
+        public void DrawTree(TreeViewItem parent, TreeNode<SyntaxNode> node)
+        {
+            TreeViewItem newnode = new TreeViewItem();
+            newnode.Header = node.Content.ToString();
+            parent.Items.Add(newnode);
+
+            foreach (var link in node.Nodes)
+            {
+                DrawTree(newnode, link);
+            }
+
+            parent.IsExpanded = true;
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -80,11 +92,11 @@ namespace SignalIDE
             if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        private void CompileButton_Click(object sender, RoutedEventArgs e)
+        private async void CompileButton_Click(object sender, RoutedEventArgs e)
         {
             var str = EditField.Text;
             var inp = new StringAsFileBuffer(str);
-            _lexer.Clear();
+            _lexer = new LexAn();
 
             try {
                 _lexer.Scan(inp);
@@ -127,6 +139,31 @@ namespace SignalIDE
             bs.Mode = BindingMode.OneWay;
             BindingOperations.ClearBinding(ConstTable, DataGrid.ItemsSourceProperty);
             ConstTable.SetBinding(DataGrid.ItemsSourceProperty, bs);
+
+            var syntax = new SyntaxAnalyser(_lexer);
+            var loading = new Loading();
+            loading.Show();
+            loading.progress.Maximum = _lexer.Output.Count - 1;
+            syntax.LexIndexChanged += (i) => ProgressUpdate(loading, i);
+            await Task.Run(() => syntax.BuildAST());
+            loading.Close();
+            Log = syntax.IsValid ? "Valid" : "Invalid";
+            if (!syntax.IsValid)
+                Log = syntax.ErrorMessage;
+            else
+            {
+                var root = treeView.Items[0];
+                DrawTree((TreeViewItem)root, syntax.Tree.Root);
+                
+                tabs.SelectedIndex = 1;
+            }
+        }
+
+        public void ProgressUpdate(Loading l, int i)
+        {
+            l.progress.Dispatcher.Invoke(
+                () => l.progress.Value = i
+            );
         }
 
         private void MenuItem_ClickOpen(object sender, RoutedEventArgs e)

@@ -21,12 +21,31 @@ namespace SignalTranslatorCore
 
         public List<int> Output { get; private set; } = new List<int>();
 
+        internal List<int> _paginator = new List<int>();
+
         SymbolCat[] _char;
 
         public LexAn()
         {
             InitializeTables();
             CreateCharTable();
+        }
+
+        public void NextLine()
+        {
+            _paginator.Add(Output.Count - 1);
+        }
+
+        public int LineOf(int index)
+        {
+            int line = 1;
+            foreach (int i in _paginator)
+            {
+                if (index <= i)
+                    return line;
+                line++;
+            }
+            return 0;
         }
 
         private void CreateCharTable ()
@@ -72,16 +91,17 @@ namespace SignalTranslatorCore
                 "PROCEDURE",
                 "BEGIN",
                 "END",
-                "DEFUNC",
+                "DEFFUNC",
                 "LABEL",
                 "INTEGER",
                 "FLOAT",
                 "BLOCKFLOAT",
-                "LOOP",
+                "LOOP", "ENDLOOP",
                 "GOTO",
                 "LINK",
                 "IN", "OUT",
-                "RETURN"
+                "RETURN",
+                "VAR"
             };
             Keywords = new Table(keyw, startIndex: 300);
             Identifiers = new Table(canAdd: true, startIndex: 500);
@@ -167,6 +187,8 @@ namespace SignalTranslatorCore
                                     }
                                     else
                                         prev = file.CurrentChar;
+                                    if (file.CurrentChar == '\n')
+                                        NextLine();
                                 }
                                 if (file.EndReached && !closed)
                                     throw new FormatException("Unclosed comment!");
@@ -178,6 +200,8 @@ namespace SignalTranslatorCore
                         break;
 
                     case SymbolCat.Whitespace:
+                        if (file.CurrentChar == '\n')
+                            NextLine();
                         file.TryMoveNext();
                         break;  //ignore
 
@@ -185,6 +209,7 @@ namespace SignalTranslatorCore
                         throw new FormatException("Wtf is that? " + file.CurrentChar);
                 } 
             }
+            NextLine();
         }
 
         private void IdentifierOut(StringBuilder sb)

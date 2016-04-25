@@ -54,24 +54,34 @@ namespace SignalTranslatorCore
             return this;
         }
 
-        public override string ToString()
+        public string ToString(int level)
         {
+            var tabs = "";
+            foreach(var i in Enumerable.Range(0, level))
+            {
+                tabs += '\t';
+            }
+
             if (Nodes.Count == 0)
-                return Content?.ToString();
+                return Content.ToString();
             else
             {
-                StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder(tabs);
                 if (Content != null)
                     sb.Append(Content.ToString());
-                sb.Append(" [ ");
+                sb.Append(Environment.NewLine + tabs);
                 foreach (var n in _nodes)
                 {
-                    sb.Append(n.ToString());
-                    sb.Append(" ");
+                    sb.Append(n.ToString(level++));
+                    sb.Append(Environment.NewLine + tabs);
                 }
-                sb.Append("]");
                 return sb.ToString();
             }
+        }
+
+        public override string ToString()
+        {
+            return ToString(0);
         }
     }
 }
