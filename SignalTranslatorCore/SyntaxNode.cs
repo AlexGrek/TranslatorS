@@ -43,7 +43,7 @@ namespace SignalTranslatorCore
         public override string ToString()
         {
             if (Value > 0)
-                return $"{Name}'{Value}' {Tag}";
+                return $"{Value}: {Name} {Tag}";
             else if (Tag != "")
             {
                 return $"{Name} ({Tag})";

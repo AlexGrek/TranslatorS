@@ -48,6 +48,8 @@ namespace SignalTranslatorCore
             } catch (IndexOutOfRangeException)
             {
                 IsValid = false;
+                _errorMsg = "Unexpected end of file";
+                Except = new SyntaxException("Unexpected end of file");
             }
             catch(SyntaxException ex)
             {
@@ -65,17 +67,43 @@ namespace SignalTranslatorCore
             return new TreeNode<SyntaxNode>(new SyntaxNode(name, value, tag));
         }
 
-        public void Keyword(string keyword)
+        public void Keyword(string keyword, TreeNode<SyntaxNode> tree)
         {
             if (v[index] == input.Keywords[keyword])
+            {
+                var node = CreateNode(keyword, v[index]);
+                tree.AddNode(node);
                 index++;
+            }
             else Error(keyword);
         }
 
-        public void Del(string delimiter)
+        public bool IsKeyword(string keyword)
+        {
+            if (v[index] == input.Keywords[keyword])
+            {
+                return true;
+            }
+            else return false;
+        }
+
+        public bool IsDelimiter(string del)
+        {
+            if (v[index] == input.Delimiters[del])
+            {
+                return true;
+            }
+            else return false;
+        }
+
+        public void Del(string delimiter, TreeNode<SyntaxNode> tree)
         {
             if (v[index] == input.Delimiters[delimiter])
+            {
+                var node = CreateNode(delimiter, v[index]);
+                tree.AddNode(node);
                 index++;
+            }
             else Error(delimiter);
         }
 
@@ -134,6 +162,12 @@ namespace SignalTranslatorCore
             return value >= 500;
         }
 
+        public bool IsConstant(int i)
+        {
+            var value = v[i];
+            return value >= 400 && value < 500;
+        }
+
         #region ErrorHandling
         public void Error(string expected, string found, bool critical = false, [CallerMemberName] string callerName = "")
         {
@@ -168,77 +202,28 @@ namespace SignalTranslatorCore
 
         private void Program(TreeNode<SyntaxNode> tree)
         {
-            var i = index;
-            try
+            if (IsKeyword("PROGRAM"))
             {
-                Keyword("PROGRAM");
                 var node = CreateNode("program");
+                Keyword("PROGRAM", node);
                 ProcedureIdentifier(node);
-                Del(";");
+                Del(";", node);
                 Block(node);
-                Del(".");
+                Del(".", node);
                 tree.AddNode(node);
-            } catch (SyntaxException e)   //"PROGRAM" failed
+            }
+            else
             {
-                if (e.Expected != "PROGRAM")
-                    throw;
                 // so let's try "PROCEDURE"
-                index = i;
-                Keyword("PROCEDURE");
                 var node = CreateNode("program");
+                Keyword("PROCEDURE", node);
                 ProcedureIdentifier(node);
                 ParametersList(node);
-                Del(";");
+                Del(";", node);
                 Block(node);
-                Del(";");
+                Del(";", node);
                 tree.AddNode(node);
             }
-            /*
-            if (v[index] != Keyword("PROGRAM"))
-            {
-                //PROCEDURE < procedure - identifier > < parameters - list > ; < block > ;
-                if (v[index] != Keyword("PROCEDURE"))
-                    return Error("PROGRAM or PROCEDURE");
-                index++;
-                var proc = tree.AddNode(new SyntaxNode("program:procedure"));
-                if (!ProcedureIdentifier(proc))
-                    return false;
-                index++;
-                if (!ParametersList(proc))
-                    return false;
-                index++;
-                if (v[index] != Del(";"))
-                    return Error(";");
-                index++;
-                if (!Block(proc))
-                    return false;
-                index++;
-                if (v[index] != Del(";"))
-                    return Error(";");
-
-                return true;
-            }
-
-            //PROGRAM <procedure-identifier> ;
-            //< block >.
-            index++;
-            var next = tree.AddNode(new SyntaxNode("program"));
-            if (!ProcedureIdentifier(next))
-                return false;
-            index++;
-            if (v[index] != Del(";"))
-                return Error(";");
-            index++;
-            if (!Block(next))
-                return false;
-            index++;
-
-            if (v[index] != Del("."))
-                return Error(".");
-
-            return true;
-
-    */
         }
 
         private void ProcedureIdentifier(TreeNode<SyntaxNode> tree)
@@ -252,7 +237,7 @@ namespace SignalTranslatorCore
         {
             if (!IsIdentifier(index))
                 Error("identifier");
-            var node = CreateNode("identifier", v[index]);
+            var node = CreateNode("identifier", Decode(v[index]), v[index]);
             index++;
             tree.AddNode(node);
         }
@@ -262,9 +247,9 @@ namespace SignalTranslatorCore
 
             var node = CreateNode("block");
             Declarations(node);
-            Keyword("BEGIN");
+            Keyword("BEGIN", node);
             StatementsList(node);
-            Keyword("END");
+            Keyword("END", node);
             tree.AddNode(node);
         }
 
@@ -276,6 +261,7 @@ namespace SignalTranslatorCore
             VariableDeclarations(node);
             MathFunctionDeclarations(node);
             ProcedureDeclarations(node);
+            ConstDeclarations(node);
 
             tree.AddNode(node);
         }
@@ -283,212 +269,114 @@ namespace SignalTranslatorCore
         private void StatementsList(TreeNode<SyntaxNode> tree)
         {
             var node = CreateNode("statements-list");
-            int i = index;
-            try
-            {
-                Statement(node);
+            bool isStLst = Statement(node);
+            if (isStLst)
                 StatementsList(node);
-            }
-            catch (SyntaxException e)
-            {
-                if (e.Critical)
-                    throw;
-                index = i;
-                node = CreateNode("statements-list");
+            else
                 Empty(node);
-            }
 
             tree.AddNode(node);
         }
 
-        private void Statement(TreeNode<SyntaxNode> tree)
+        private bool Statement(TreeNode<SyntaxNode> tree)
         {
-            var i = index;
-            try
+            var node = CreateNode("statement");
+            if (IsConstant(index))
             {
-                var node = CreateNode("statement", ":");
                 UnsignedInteger(node);
-                Del(":");
+                Del(":", node);
                 Statement(node);
                 tree.AddNode(node);
-                return;
-
-            } catch (SyntaxException e)
-            {
-                if (e.Expected != "unsigned-integer")
-                {
-                    e.Critical = true;
-                    throw;
-                }
-                index = i;
+                return true;
             }
-            i = index;
-            try
+            else
+            if (IsIdentifier(index))
             {
-                var node = CreateNode("statement", "procedure");
                 ProcedureIdentifier(node);
                 ActualArguments(node);
-                Del(";");
+                Del(";", node);
                 tree.AddNode(node);
-                return;
+                return true;
             }
-            catch (SyntaxException e)
+            else if (IsKeyword("LOOP"))
             {
-                if (e.Critical)
-                    throw;
-                index = i;
-            }
-            i = index;
-            try
-            {
-                var node = CreateNode("statement", "loop");
-                Keyword("LOOP");
+                Keyword("LOOP", node);
                 StatementsList(node);
-                Keyword("ENDLOOP");
-                Del(";");
+                Keyword("ENDLOOP", node);
+                Del(";", node);
                 tree.AddNode(node);
-                return;
+                return true;
             }
-            catch (SyntaxException e)
+            else if (IsKeyword("GOTO"))
             {
-                if (e.Expected != "LOOP")
-                {
-                    e.Critical = true;
-                    throw;
-                }
-                index = i;
-            }
-            i = index;
-            try
-            {
-                var node = CreateNode("statement", "goto");
-                Keyword("GOTO");
+                Keyword("GOTO", node);
                 UnsignedInteger(node);
-                Del(";");
+                Del(";", node);
                 tree.AddNode(node);
-                return;
+                return true;
             }
-            catch (SyntaxException e)
+            else if (IsKeyword("LINK"))
             {
-                if (e.Expected != "GOTO")
-                    throw;
-                index = i;
-            }
-            i = index;
-            try
-            {
-                var node = CreateNode("statement", "link");
-                Keyword("LINK");
+                Keyword("LINK", node);
                 VariableIdentifier(node);
                 UnsignedInteger(node);
-                Del(";");
+                Del(";", node);
                 tree.AddNode(node);
-                return;
+                return true;
             }
-            catch (SyntaxException e)
+            else if (IsKeyword("IN"))
             {
-                if (e.Expected != "LINK")
-                    throw;
-                index = i;
-            }
-            i = index;
-            try
-            {
-                var node = CreateNode("statement", "in");
-                Keyword("IN");
+                Keyword("IN", node);
                 UnsignedInteger(node);
-                Del(";");
+                Del(";", node);
                 tree.AddNode(node);
-                return;
+                return true;
             }
-            catch (SyntaxException e)
+            else if (IsKeyword("OUT"))
             {
-                if (e.Expected != "IN")
-                    throw;
-                index = i;
-            }
-            i = index;
-            try
-            {
-                var node = CreateNode("statement", "out");
-                Keyword("OUT");
+                Keyword("OUT", node);
                 UnsignedInteger(node);
-                Del(";");
+                Del(";", node);
                 tree.AddNode(node);
-                return;
+                return true;
             }
-            catch (SyntaxException e)
+            else if (IsKeyword("RETURN"))
             {
-                if (e.Expected != "OUT")
-                    throw;
-                index = i;
-            }
-            i = index;
-            try
-            {
-                var node = CreateNode("statement", "return");
-                Keyword("RETURN");
-                Del(";");
+                Keyword("RETURN", node);
+                Del(";", node);
                 tree.AddNode(node);
-                return;
+                return true;
             }
-            catch (SyntaxException e)
+            else if (IsDelimiter(";"))
             {
-                if (e.Expected != "RETURN")
-                    throw;
-                index = i;
-            }
-            i = index;
-            try
-            {
-                var node = CreateNode("statement", ";");
-                Del(";");
+                Del(";", node);
                 tree.AddNode(node);
-                return;
+                return true;
             }
-            catch (SyntaxException)
+            else if (IsDelimiter("($"))
             {
-                index = i;
-            }
-            i = index;
-            try
-            {
-                var node = CreateNode("statement", "assembly file");
-                Del("($");
+                Del("($", node);
                 AssemblyInsertFileIdentifier(node);
-                Del("$)");
+                Del("$)", node);
                 tree.AddNode(node);
-                return;
+                return true;
             }
-            catch (SyntaxException e)
-            {
-                index = i;
-                throw;
-            }
+            else
+                return false;
         }
 
         private void ActualArguments(TreeNode<SyntaxNode> tree)
         {
             var node = CreateNode("actual-arguments");
-            int i = index;
-            try
+            if (IsDelimiter("("))
             {
-                Del("(");
+                Del("(", node);
                 VariableIdentifier(node);
                 IdentifiersList(node);
-                Del(")");
+                Del(")", node);
             }
-            catch (SyntaxException e)
-            {
-                if (e.Expected != "(")
-                {
-                    e.Critical = true;
-                    throw;
-                }
-                index = i;
-                node = CreateNode("actual-arguments");
+            else
                 Empty(node);
-            }
 
             tree.AddNode(node);
         }
@@ -496,22 +384,15 @@ namespace SignalTranslatorCore
         private void LabelDeclarations(TreeNode<SyntaxNode> tree)
         {
             var node = CreateNode("label-declarations");
-            int i = index;
-            try
+            if (IsKeyword("LABEL"))
             {
-                Keyword("LABEL");
+                Keyword("LABEL", node);
                 UnsignedInteger(node);
                 LabelsList(node);
-                Del(";");
+                Del(";", node);
             }
-            catch (SyntaxException e)
-            {
-                if (e.Expected != "LABEL")
-                    throw;
-                index = i;
-                node = CreateNode("label-declarations");
+            else
                 Empty(node);
-            }
 
             tree.AddNode(node);
         }
@@ -532,21 +413,14 @@ namespace SignalTranslatorCore
         {
             var node = CreateNode("labels-list");
 
-            int i = index;
-            try
+            if (IsDelimiter(","))
             {
-                Del(",");
+                Del(",", node);
                 UnsignedInteger(node);
                 LabelsList(node);
             }
-            catch (SyntaxException e)
-            {
-                if (e.Expected != ",")
-                    throw;
-                index = i;
-                node = CreateNode("label-declarations");
+            else
                 Empty(node);
-            }
 
             tree.AddNode(node);
         }
@@ -561,20 +435,13 @@ namespace SignalTranslatorCore
         {
             var node = CreateNode("variable-declarations");
 
-            int i = index;
-            try
+            if (IsKeyword("VAR"))
             {
-                Keyword("VAR");
+                Keyword("VAR", node);
                 DeclarationsList(node);
             }
-            catch (SyntaxException e)
-            {
-                if (e.Expected != "VAR")
-                    throw;
-                index = i;
-                node = CreateNode("variable-declarations");
+            else
                 Empty(node);
-            }
 
             tree.AddNode(node);
         }
@@ -583,18 +450,13 @@ namespace SignalTranslatorCore
         {
             var node = CreateNode("declarations-list");
 
-            int i = index;
-            try
+            if (IsIdentifier(index))
             {
                 Declaration(node);
                 DeclarationsList(node);
             }
-            catch (SyntaxException)
-            {
-                index = i;
-                node = CreateNode("declarations-list");
+            else
                 Empty(node);
-            }
 
             tree.AddNode(node);
         }
@@ -604,20 +466,15 @@ namespace SignalTranslatorCore
             var node = CreateNode("declaration");
             VariableIdentifier(node);
             IdentifiersList(node);
-            Del(":");
+            Del(":", node);
             Attribute_(node);
-            Del(";");
+            Del(";", node);
             tree.AddNode(node);
         }
 
         private void Attribute_(TreeNode<SyntaxNode> tree)
         {
-            if (v[index] ==
-                input.Keywords["FLOAT"] ||
-                v[index] ==
-                input.Keywords["BLOCKFLOAT"] ||
-                v[index] ==
-                input.Keywords["INTEGER"])
+            if (IsAttribute(index))
             {
                 var node = CreateNode("attribute", v[index]);
                 index++;
@@ -626,23 +483,28 @@ namespace SignalTranslatorCore
             else Error("INTEGER | FLOAT | BLOCKFLOAT");
         }
 
+        private bool IsAttribute(int i)
+        {
+            return (v[i] ==
+                input.Keywords["FLOAT"] ||
+                v[i] ==
+                input.Keywords["BLOCKFLOAT"] ||
+                v[i] ==
+                input.Keywords["INTEGER"]);
+        }
+
         private void IdentifiersList(TreeNode<SyntaxNode> tree)
         {
             var node = CreateNode("identifiers-list");
 
-            int i = index;
-            try
+            if (IsDelimiter(","))
             {
-                Del(",");
+                Del(",", node);
                 VariableIdentifier(node);
                 IdentifiersList(node);
             }
-            catch (SyntaxException)
-            {
-                index = i;
-                node = CreateNode("identifiers-list");
+            else
                 Empty(node);
-            }
 
             tree.AddNode(node);
         }
@@ -651,20 +513,13 @@ namespace SignalTranslatorCore
         {
             var node = CreateNode("math-functon-declarations");
 
-            int i = index;
-            try
+            if (IsKeyword("DEFFUNC"))
             {
-                Keyword("DEFFUNC");
+                Keyword("DEFFUNC", node);
                 FunctionList(node);
             }
-            catch (SyntaxException e)
-            {
-                if (e.Expected != "DEFFUNC")
-                    throw;
-                index = i;
-                node = CreateNode("math-functon-declarations");
+            else
                 Empty(node);
-            }
 
             tree.AddNode(node);
         }
@@ -675,16 +530,13 @@ namespace SignalTranslatorCore
 
             tree.AddNode(node);
 
-            int i = index;
-            try
+            if (IsIdentifier(index))
             {
                 Function(node);
                 FunctionList(node);
             }
-            catch (SyntaxException)
+            else
             {
-                index = i;
-                node = CreateNode("function-list");
                 Empty(node);
             }
 
@@ -695,19 +547,19 @@ namespace SignalTranslatorCore
         {
             var node = CreateNode("function");
             FunctionIdentifier(node);
-            Del("=");
+            Del("=", node);
             Expression(node);
             FunctionCharacteristic(node);
-            Del(";");
+            Del(";", node);
             tree.AddNode(node);
         }
 
         private void FunctionCharacteristic(TreeNode<SyntaxNode> tree)
         {
             var node = CreateNode("function-characteristic");
-            Del(@"\");
+            Del(@"\", node);
             UnsignedInteger(node);
-            Del(",");
+            Del(",", node);
             UnsignedInteger(node);
             tree.AddNode(node);
         }
@@ -744,18 +596,13 @@ namespace SignalTranslatorCore
         private void ProcedureDeclarations(TreeNode<SyntaxNode> tree)
         {
             var node = CreateNode("procedure-declarations");
-            int i = index;
-            try
+            if (IsKeyword("PROCEDURE"))
             {
                 Procedure(node);
                 ProcedureDeclarations(node);
             }
-            catch (SyntaxException e)
+            else
             {
-                if (e.Expected != "PROCEDURE")
-                    throw;
-                index = i;
-                node = CreateNode("procedure-declarations");
                 Empty(node);
             }
 
@@ -765,10 +612,10 @@ namespace SignalTranslatorCore
         private void Procedure(TreeNode<SyntaxNode> tree)
         {
             var node = CreateNode("procedure");
-            Keyword("PROCEDURE");
+            Keyword("PROCEDURE", node);
             ProcedureIdentifier(node);
             ParametersList(node);
-            Del(";");
+            Del(";", node);
             tree.AddNode(node);
         }
 
@@ -776,19 +623,14 @@ namespace SignalTranslatorCore
         {
             var node = CreateNode("parameters-list");
 
-            int i = index;
-            try
+            if (IsDelimiter("("))
             {
-                Del("(");
+                Del("(", node);
                 AttributesList(node);
-                Del(")");
+                Del(")", node);
             }
-            catch (SyntaxException e)
+            else
             {
-                if (e.Expected != "(")
-                    throw;
-                index = i;
-                node = CreateNode("parameters-list");
                 Empty(node);
             }
 
@@ -799,23 +641,53 @@ namespace SignalTranslatorCore
         {
             var node = CreateNode("attributes-list");
 
-            int i = index;
-            try
+            if (IsAttribute(index))
             {
                 Attribute_(node);
-                Del(",");
+                Del(",", node);
                 AttributesList(node);
             }
-            catch (SyntaxException)
+            else
+                Empty(node);
+
+            tree.AddNode(node);
+        }
+
+        private void ConstList(TreeNode<SyntaxNode> tree)
+        {
+            var node = CreateNode("parameters-list");
+
+            if (IsDelimiter("("))
             {
-                index = i;
-                node = CreateNode("attributes-list");
+                Del("(", node);
+                AttributesList(node);
+                Del(")", node);
+            }
+            else
+            {
                 Empty(node);
             }
 
             tree.AddNode(node);
         }
 
+        private void ConstDeclarations(TreeNode<SyntaxNode> tree)
+        {
+            var node = CreateNode("const-declarations");
+
+            if (IsKeyword("CONST"))
+            {
+                Keyword("CONST", node);
+                VariableIdentifier(node);
+                Del("=", node);
+                UnsignedInteger(node);
+                Del(";", node);
+            }
+            else
+                Empty(node);
+
+            tree.AddNode(node);
+        }
 
         #endregion
     }

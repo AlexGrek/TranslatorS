@@ -146,7 +146,7 @@ namespace SignalIDE
             loading.progress.Maximum = _lexer.Output.Count - 1;
             syntax.LexIndexChanged += (i) => ProgressUpdate(loading, i);
             await Task.Run(() => syntax.BuildAST());
-            loading.Close();
+            loading.progress.IsIndeterminate = true;
             Log = syntax.IsValid ? "Valid" : "Invalid";
             if (!syntax.IsValid)
                 Log = syntax.ErrorMessage;
@@ -156,7 +156,10 @@ namespace SignalIDE
                 DrawTree((TreeViewItem)root, syntax.Tree.Root);
                 
                 tabs.SelectedIndex = 1;
+
+                Clipboard.SetText(syntax.Tree.Root.ToString());
             }
+            loading.Close();
         }
 
         public void ProgressUpdate(Loading l, int i)

@@ -101,7 +101,8 @@ namespace SignalTranslatorCore
                 "LINK",
                 "IN", "OUT",
                 "RETURN",
-                "VAR"
+                "VAR",
+                "CONST"
             };
             Keywords = new Table(keyw, startIndex: 300);
             Identifiers = new Table(canAdd: true, startIndex: 500);

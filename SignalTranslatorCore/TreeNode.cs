@@ -56,24 +56,22 @@ namespace SignalTranslatorCore
 
         public string ToString(int level)
         {
-            var tabs = "";
+            var tabs = Environment.NewLine;
             foreach(var i in Enumerable.Range(0, level))
             {
                 tabs += '\t';
             }
 
             if (Nodes.Count == 0)
-                return Content.ToString();
+                return tabs + Content.ToString();
             else
             {
                 StringBuilder sb = new StringBuilder(tabs);
                 if (Content != null)
                     sb.Append(Content.ToString());
-                sb.Append(Environment.NewLine + tabs);
                 foreach (var n in _nodes)
                 {
-                    sb.Append(n.ToString(level++));
-                    sb.Append(Environment.NewLine + tabs);
+                    sb.Append(n.ToString(level+1));
                 }
                 return sb.ToString();
             }
