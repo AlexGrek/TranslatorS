@@ -158,6 +158,16 @@ namespace SignalIDE
                 tabs.SelectedIndex = 1;
 
                 Clipboard.SetText(syntax.Tree.Root.ToString());
+
+                var output = new CodeGenerator(_lexer, syntax.Tree);
+                try
+                {
+                    var text = output.GenerateCode();
+                    asmcode.Text = text;
+                } catch (SemanticException ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }
             loading.Close();
         }

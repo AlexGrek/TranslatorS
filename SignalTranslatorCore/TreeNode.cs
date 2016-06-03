@@ -31,6 +31,14 @@ namespace SignalTranslatorCore
             return node;
         }
 
+        public TreeNode<T> this[int i]
+        {
+            get
+            {
+                return this.Nodes[i];
+            }
+        }
+
         public TreeNode<T> RemoveNode(TreeNode<T> node)
         {
             _nodes.Remove(node);

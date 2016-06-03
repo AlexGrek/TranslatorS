@@ -111,6 +111,16 @@ namespace SignalTranslatorCore
             return ((IDictionary<string, int>)_table).GetEnumerator();
         }
 
+        public string FindKey(int value)
+        {
+            foreach (var kvp in this)
+            {
+                if (kvp.Value == value)
+                    return kvp.Key;
+            }
+            return $"ERR: NOTHING FOUND FOR VALUE {value}";
+        }
+
         public bool Remove(KeyValuePair<string, int> item)
         {
             return ((IDictionary<string, int>)_table).Remove(item);

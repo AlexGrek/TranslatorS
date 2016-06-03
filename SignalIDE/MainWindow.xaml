@@ -102,8 +102,10 @@
                         </TreeViewItem>
                     </TreeView>
                 </TabItem>
-                <TabItem Header="Output"/>
-                
+                <TabItem Header="Output">
+                    <TextBlock x:Name="asmcode"></TextBlock>
+                </TabItem>
+
             </TabControl>
             <GridSplitter Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" Width="5"
                       VerticalAlignment="Stretch" HorizontalAlignment="Center"></GridSplitter>
